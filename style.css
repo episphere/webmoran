@@ -1,0 +1,98 @@
+.plot {
+  position: relative;
+  display: inline-block;
+}
+
+.plot-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-top: 15px;
+  gap: 5px;
+  width: fit-content;
+}
+
+.top-element {
+  display: inline-block;
+  padding-right: 10px;
+}
+
+body {
+  font-family: "Helvetica";
+  color: rgb(63, 63, 63);
+  padding-left: 30px;
+}
+
+h1 {
+  color: brown
+}
+
+.or {
+  margin-right: 60px;
+}
+
+.file-select {
+  color: rgb(63, 63, 63);
+  margin-top: 12px;
+  display: inline-block;
+  margin-right: 15px;
+}
+
+.file-select-block {
+  font-family: Sans-Serif;
+  width: 900px;
+}
+
+.file-select-label {
+  font-size: .8em;
+  font-style: italic;
+  width: 90px;
+  display: inline-block;
+}
+
+.file-select input {
+  font-size: .95em;
+}
+
+.collapsible {
+  background-color: brown;
+  color: white;
+  padding-left: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: .9em;
+  cursor: pointer;
+}
+.collapsible:hover {
+  background-color: #b76d6d;
+}
+.collapsible-arrow {
+  float:right;
+  font-size: 2em;
+  margin-top: -6px;
+  margin-right: 6px;
+}
+.content {
+  padding: 16px;
+  /* padding-left: 12px; */
+  /* padding-right: 12px; */
+  /* padding-top: 8px; */
+  /* padding-bottom: 8px; */
+  font-size: .9em;
+  background-color: #f1f1f1;
+  /* display: none; */
+  overflow: hidden;
+}
+
+.select-row {
+  margin-top: 12px;
+  display: flex;
+  /* align-items: flex-start; */
+  column-gap: 15px;
+  align-items: center;
+  justify-items: center;
+  /* align-items: flex-end; */
+}
+.field-select {
+  width: 100px;
+}

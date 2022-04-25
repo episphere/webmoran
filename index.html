@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <!-- <script src="https://unpkg.com/topojson-client@3"></script> -->
+  <script src="https://unpkg.com/topojson-server@3"></script>
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="top">
+    <div class="top-element"><h1>Easy Moran<sup style="font-size: .5em; color: red;">WIP</sup></h1></div>
+    <span class="top-element"> [<a href="https://github.com/episphere/geo">code</a>] </span>
+  </div>
+
+  <div class="file-select-block">
+    <div class="collapsible">
+      Data Configuration
+      <span class="collapsible-arrow material-icons">arrow_drop_down</span>
+    </div>
+    <div id="file-select-content" class="content">
+      Load and configure the data here. You can either upload a data file or link to a 
+      <a href="https://enable-cors.org/"> CORS-enabled</a> data URL...
+      <div>
+        <div class="file-select" >
+          <label for="data-select">Geo File:</label>
+          <input type="file" id="geo-data-select"  accept=".json,.csv" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('geo-data-select').click();" />
+          <label id="geo-data-select-label" class="file-select-label" for="geo-data-select">None</label>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
+        <span class="url-select">
+          <label for="url-input">URL:</label>
+          <input id="url-input" type="url">
+          <button  id="get-button" type="button">Get</button>
+        </span>
+
+        <span id="upload-error"></span>
+      </div>
+
+      <div>
+        <!-- TODO: Flex box (or something), align ID select right.-->
+        <div class="file-select" >
+          <label for="data-select">Row File:</label>
+          <input type="file" id="row-data-select"  accept=".json,.csv" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('row-data-select').click();" />
+          <label id="row-data-select-label" class="file-select-label" for="row-data-select">None</label>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
+        <span class="url-select">
+          <label for="url-input">URL:</label>
+          <input id="url-input" type="url">
+          <button  id="get-button" type="button">Get</button>
+        </span>
+
+        <span id="upload-error"></span>
+
+        <label style="margin-left: 10px" for="idfield-select">ID Field:</label>
+        <select class="field-select" id="idfield-select"></select>
+      </div>
+      <div class="select-row">
+
+      <div>
+        <div>
+          <label for="vfield-select">Value Field:</label>
+          <select class="field-select" id="vfield-select"></select>
+       </div>
+
+        <!-- <div class="field-stack" style="align-items: flex-end">
+          <div>
+            <label for="gfield-select">Group Field:</label>
+            <select class="field-select" id="gfield-select"></select>
+          </div>
+          <div>
+            <label for="g-select">Group:</label>
+            <select class="field-select" id="g-select"></select>
+          </div>
+        </div> -->
+
+        <div style="margin-left: auto; padding-top: 10px">
+          <button id="run-button" type="button">Run</button>
+        </div>
+       
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="plot-row">
+      <div class="plot" id="plot-key" style="margin-block: auto"></div>
+      <div class="plot" id="plot-datamap"></div>
+      <div class="plot" id="plot-moran"></div>
+    </div>
+  </div>
+
+</br>
+  
+  <div>
+    <div id="slider"></div>
+  </div>
+  
+</body>
+
+<script src="src/main.js" type="module"></script>
+</html>
