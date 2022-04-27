@@ -33,6 +33,16 @@ export class DataMap extends Plot {
   setup() {
     this.valuedFeatures = this.data.features.filter(d => this.vField in d.properties)
 
+    const numberFormatBase = this.numberFormat
+    const numberFormat = d => {
+      if (typeof d == "number") {
+        return numberFormatBase(d)
+      } else {
+        return d
+      }
+    }
+    this.numberFormat = numberFormat
+
     this.bbox = bboxGeo(this.data)
     if (!this.width) {
       this.width = Math.abs(this.bbox[2] - this.bbox[0])
@@ -154,6 +164,23 @@ export class DataMap extends Plot {
       .attr("fill", d => {
         return this.fillColorFunction(d.properties)
       })
+  }
+
+  setVField(vField, reverse = false, centerZero = false) {
+    this.vField = vField
+    let valueExtent = d3.extent(this.data.features.filter(
+      d => !isNaN(parseFloat(d.properties[vField]))), d => d.properties[vField])
+    
+    if (reverse) {
+      valueExtent = [...valueExtent].reverse()
+    }
+
+    if (centerZero) {
+      const colorMaxMag = Math.max(...valueExtent.map(d => Math.abs(d)))
+      valueExtent = [-colorMaxMag, colorMaxMag]
+    }
+
+    this.colorScale.domain(valueExtent)
   }
 
   setFillColorFunction(fillColorFunction) {

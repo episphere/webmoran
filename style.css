@@ -40,7 +40,7 @@ h1 {
 
 .file-select-block {
   font-family: Sans-Serif;
-  width: 900px;
+  width: 905px;
 }
 
 .file-select-label {
@@ -80,7 +80,7 @@ h1 {
   /* padding-bottom: 8px; */
   font-size: .9em;
   background-color: #f1f1f1;
-  /* display: none; */
+  display: none;
   overflow: hidden;
 }
 
@@ -93,6 +93,53 @@ h1 {
   justify-items: center;
   /* align-items: flex-end; */
 }
+
+
 .field-select {
   width: 100px;
+}
+
+#controls {
+  font-size: 0.8em;
+  display: flex;
+  margin-top: 10px;
+}
+
+.radio-select {
+  display: inline-flex;
+}
+
+.radio-select > label {
+  margin-right: 15px;
+}
+
+.radio-select > input {
+  margin-right: 4px;
+  margin-top: 0px;
+}
+
+.radio-select > span {
+  margin-right: 10px;
+  margin-top: 0px;
+}
+
+input[type="radio"] {
+  /* margin-top: -1px; */
+
+  vertical-align: middle;
+}
+
+#vfield-select {
+  max-width: 200px;
+  width: auto;
+}
+
+.check > input {
+  margin-left: 5px; 
+  margin-top: 0;
+  vertical-align: middle;
+}
+
+#radial-check-div {
+  margin-left: auto;
 }

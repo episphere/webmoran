@@ -43,9 +43,18 @@ export class ColorKey {
         .style("font-family", "sans-serif")
     }
 
-    if (this.type == "continuous") {
+    // if (this.title) {
+    //   this.titleTip = d3.select(this.element).append("div")
+    //     .style("position", "absolute")
+    //     .style("font-size", ".6em")
+    //     .style("pointer-events", "none")
+    //     .style("left", this.margin.left + "px")
+    //     .style("top", "10px")
+    //     .html(this.title)
+    // }
     
-      
+
+    if (this.type == "continuous") {
       this.nodes.bar = this.nodes.base.append("rect")
         .attr("x", this.margin.left)
         .attr("y", keyMargin)

@@ -102,11 +102,15 @@ export class GeoSpatial {
     // I think jsgeoda has High-Low and Low-High backwards, so don't rely on the labels.
     const labels = ["Not significant", "High-High", "Low-Low", "Low-High", "High-Low"]
 
-    let n = 0
-
-    const validFeatures = this.data.features.filter(feature => {
+    const validIndices = new Set()
+    const validFeatures = this.data.features.filter((feature,i) => {
       const value = feature.properties[vField]
-      return value != null && !isNaN(value) && typeof value == "number"
+      const valid = value != null && !isNaN(value) && typeof value == "number"
+      if (valid) {
+        validIndices.add(i)
+
+      }
+      return valid
     })
     const validFeatureMap = new Map(validFeatures.map(d => [d.id, d]))
 
@@ -122,7 +126,29 @@ export class GeoSpatial {
     const mean = d3.mean(validFeatures, d => d.properties[vField])
 
     // TODO: Probably breaks when there are invalid features. FIX! 
-    const geodaResult = this.geoda.localMoran(this.w, validFeatures.map(d => d.properties[vField]))
+    //const geodaResult = this.geoda.localMoran(this.w, validFeatures.map(d => d.properties[vField]))
+    const geodaResult = this.geoda.localMoran(this.w, 
+      this.data.features.map(d => d.properties[vField] != null ? d.properties[vField] : NaN))
+    
+    for (const ret of ["clusters", "lisaValues", "neighbors", "pvalues"]) {
+      geodaResult[ret] = geodaResult[ret].filter((d,i) => validIndices.has(i))
+    }    
+
+    for (let [i, validFeature] of validFeatures.entries()) {
+      validFeature.properties.label = labels[geodaResult.clusters[i]]
+      validFeature.properties.p = geodaResult.pvalues[i]
+
+      let pCutoff = null
+      const pCutoffs = [0.0001, 0.001, 0.01, 0.05]
+      for (const d of pCutoffs) {
+        if (validFeature.properties.p <= d) {
+          pCutoff = d
+          break
+        }
+      }
+
+      validFeature.properties.pCutoff = pCutoff
+    }
 
     const localResults = []
     let m2 = 0 
@@ -139,11 +165,16 @@ export class GeoSpatial {
         if (neighborValue != null) {
           const neighborZ = neighborValue.properties[vField] - mean
           lag += w*neighborZ
-          neighbors.push({id: neighborId, z: neighborZ, w: w, raw: neighborValue.properties[vField]})
+          neighbors.push({
+            id: neighborId, 
+            z: neighborZ, 
+            w: w,
+            raw: neighborValue.properties[vField],
+            label: neighborValue.properties.label,
+            pCutoff: neighborValue.properties.pCutoff,
+          })
         }
       }
-
-      validFeature.properties.label = labels[geodaResult.clusters[i]]
 
       localResults.push({id: 
         validFeature.id, 
@@ -155,15 +186,30 @@ export class GeoSpatial {
         label: labels[geodaResult.clusters[i]],
         color: geodaResult.colors[geodaResult.clusters[i]],// TODO: Remove,
         pValue: geodaResult.pvalues[i],
+        pCutoff: validFeature.properties.pCutoff,
         refLisa: geodaResult.lisaValues[i]
       })
     }
+
+
     //m2 = m2 / validFeatures.length
 
     let globalMoran = 0
     for (const localResult of localResults) {
       localResult.localMoran = localResult.z * localResult.lag / m2
       globalMoran += localResult.localMoran
+    }
+
+    for (const [i, localResult] of localResults.entries()) { 
+      const feature = validFeatures[i]
+      feature.properties.localMoran = localResult.localMoran
+    }
+
+    const resultMap = new Map(localResults.map(d => [d.id, d]))
+    for (const localResult of localResults) {
+      for (const neighbor of localResult.neighbors) {
+        neighbor.localMoran = resultMap.get(neighbor.id).localMoran
+      }
     }
 
     let nGreater = 0

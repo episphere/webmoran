@@ -42,6 +42,16 @@ export class MoranPlot extends Plot {
     if (!this.fillColorFunction) {
       this.fillColorFunction = this.fill
     }
+
+    const numberFormatBase = this.numberFormat
+    const numberFormat = d => {
+      if (typeof d == "number") {
+        return numberFormatBase(d)
+      } else {
+        return d
+      }
+    }
+    this.numberFormat = numberFormat
    
     this.state.defineProperty("focus", null)
     this.state.defineProperty("select", new Set())
@@ -150,6 +160,7 @@ export class MoranPlot extends Plot {
 
       this.colorScale = d3.scaleSequential(this.colorScheme)
         .domain(valueExtent)   
+
     } else {
       this.colorScale = this.fixedColorScale
     }
@@ -209,6 +220,9 @@ export class MoranPlot extends Plot {
 
       if (v != null) {
         const localMoran = this.moranResult.localMorans.find(d => d.id == v)
+        if (!localMoran) {
+          return
+        }
 
         let tooltipText = `(${this.numberFormat(localMoran[this.xField])}, 
           ${this.numberFormat(localMoran[this.yField])})`
@@ -274,10 +288,18 @@ export class MoranPlot extends Plot {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
     this.nodes.points.selectAll("circle")
       .attr("fill", d => this.fillColorFunction(d))
+    this.nodes.radial.selectAll("path")
+      .attr("fill", d => {
+        return this.fillColorFunction(d.data)
+      })
   }
 
   fill(d) {
     return this.colorScale(d[this.colorField])
+  }
+
+  setColorField(colorField) {
+    this.colorField = colorField
   }
 
   mouseMoved(e) {
