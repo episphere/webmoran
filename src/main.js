@@ -216,11 +216,6 @@ runButton.addEventListener("click", () => {
 })
 
 d3.json("data/vi_props.json").then(d => {
-  // TODO: Remove
-  for (const feature of d.features.slice(0,8)) {
-    delete feature.properties["% Adult smoking"]
-  }
-
   geoDataSelectLabel.innerHTML = shorten("CHR 2021.csv", 15)
   updateGeoData(d, "% Adult smoking")
   runData(d)
