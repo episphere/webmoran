@@ -13,6 +13,8 @@ let dataMap = null
 let moranPlot = null
 let moranResult = null
 
+let colorScheme = d3.interpolateCividis
+
 const dataConfig = document.getElementById("data-config")
 dataConfig.addEventListener("click", () => {
   const content = dataConfig.nextElementSibling // TODO: I don't like this.
@@ -20,12 +22,41 @@ dataConfig.addEventListener("click", () => {
 })
 
 const controlsElement = document.getElementById("controls")
-controlsElement.appendChild(createRadioSelect([
+
+const colorDiv = document.createElement("div")
+colorDiv.setAttribute("id", "color-controls")
+colorDiv.appendChild(createRadioSelect([
   {value: "moran", label: "Moran [z]"},
   {value: "significance", label: "Significance [x]"}, 
   {value: "cluster", label: "Cluster [c]"},
   {value: "value", label: "Value [v]", checked: true}, 
 ], "mode", "Color Mode: "))
+controlsElement.appendChild(colorDiv)
+
+const colorSchemeDiv = document.createElement("div")
+colorSchemeDiv.setAttribute("class", "select")
+const colorSchemeSelect = document.createElement("select")
+colorSchemeSelect.setAttribute("id", "color-scheme-select")
+d3.json("data/colorSchemes.json").then(schemes => {
+  for (const scheme of schemes) {
+    const option = document.createElement("option")
+    option.setAttribute("value", scheme[1])
+    option.innerHTML = scheme[0]
+    if (scheme[1] == "Cividis") {
+      option.selected = "selected"
+    }
+    colorSchemeSelect.appendChild(option)
+  }
+})
+colorSchemeSelect.setAttribute("value", "Cividis")
+
+const colorSchemeSelectLabel = document.createElement("label")
+colorSchemeSelectLabel.setAttribute("for", "color-scheme-select")
+colorSchemeSelectLabel.innerHTML = '<b>Color Scheme: </b>'
+colorSchemeDiv.appendChild(colorSchemeSelectLabel)
+colorSchemeDiv.appendChild(colorSchemeSelect)
+colorDiv.appendChild(colorSchemeDiv)
+//for (con)
 
 const radialCheckDiv = document.createElement("span")
 radialCheckDiv.setAttribute("class", "check")
@@ -172,7 +203,7 @@ async function runData(geoData, rowData) {
 
   const valueExtent = d3.extent(geoData.features.filter(
     d => !isNaN(parseFloat(d.properties[vField]))), d => d.properties[vField])
-  colorScale = d3.scaleSequential(d3.interpolateCividis)
+  colorScale = d3.scaleSequential(colorScheme)
     .domain(valueExtent)
 
   const geoda = await geodajs.New()
@@ -249,6 +280,8 @@ function setMode(mode) {
     dataMap.setFillColorFunction(clusterColorFunction)
     moranPlot.setFillColorFunction(clusterColorFunction)
 
+    colorSchemeSelect.disabled = true
+
     new ColorKey(colorElement, clusterColorScale, "categorical",
       {width:95, title: "Cluster", margin:{left: 30, right: 45, top: 10, bottom: 10}})
   } else if (mode == "significance") {
@@ -258,6 +291,8 @@ function setMode(mode) {
     moranPlot.setColorField("p")
     dataMap.setFillColorFunction(pColorFunction)
     moranPlot.setFillColorFunction(pColorFunction)
+
+    colorSchemeSelect.disabled = true
 
     new ColorKey(colorElement, pColorScale, "categorical",
       {width:95, title: "Pseudo p", margin:{left: 30, right: 45, top: 10, bottom: 10}})
@@ -270,16 +305,20 @@ function setMode(mode) {
     dataMap.setFillColorFunction(null)
     moranPlot.setFillColorFunction(null)
 
+    colorSchemeSelect.disabled = true
+
     new ColorKey(colorElement, colorScale, "continuous", 
       {width:95,  title: "Local Moran's I", margin:{left: 30, right: 45, top: 10, bottom: 10}})
   } else if (mode == "value") {
     document.getElementById("radio-mode-value").checked = true
 
-    colorScale.interpolator(d3.interpolateCividis)
+    colorScale.interpolator(colorScheme)
     dataMap.setVField(vField)
     moranPlot.setColorField("raw")
     dataMap.setFillColorFunction(null)
     moranPlot.setFillColorFunction(null)
+
+    colorSchemeSelect.disabled = false
 
     let title = vField
     if (title.length >= 17) {
@@ -354,3 +393,23 @@ function createRadioSelect(options, name, title = null) {
 
   return div
 }
+
+colorSchemeSelect.addEventListener("change", (e) => {
+  colorScheme = d3["interpolate" + colorSchemeSelect.value]
+
+  dataMap.setColorScheme(colorScheme)
+  moranPlot.setColorScheme(colorScheme)
+
+  // dataMap.colorScheme = colorScheme
+  // moranPlot.colorScheme = colorScheme
+
+  // dataMap.setFillColorFunction(null)
+  // moranPlot.setFillColorFunction(null)
+
+  let title = vField
+  if (title.length >= 17) {
+    title = title.slice(0, 13) + "..."
+  }
+  new ColorKey(colorElement, colorScale, "continuous", 
+    {width:95,  title: title, margin:{left: 30, right: 45, top: 10, bottom: 10}})
+})

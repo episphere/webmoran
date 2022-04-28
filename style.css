@@ -143,3 +143,14 @@ input[type="radio"] {
 #radial-check-div {
   margin-left: auto;
 }
+
+#color-controls {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+}
+
+.select > select {
+  width: 200px;
+  margin-left: 15px;
+}

@@ -284,6 +284,17 @@ export class MoranPlot extends Plot {
     }
   }
 
+  setColorScheme(scheme) {
+    this.colorScheme = scheme 
+    this.colorScale.interpolator(this.colorScheme)
+    this.nodes.points.selectAll("circle")
+      .attr("fill", d => this.fillColorFunction(d))
+    this.nodes.radial.selectAll("path")
+      .attr("fill", d => {
+        return this.fillColorFunction(d.data)
+      })
+  }
+
   setFillColorFunction(fillColorFunction) {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
     this.nodes.points.selectAll("circle")

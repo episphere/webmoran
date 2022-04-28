@@ -69,7 +69,7 @@ export class DataMap extends Plot {
         const colorMaxMag = Math.max(...valueExtent.map(d => Math.abs(d)))
         valueExtent = [-colorMaxMag, colorMaxMag]
       }
-
+  
       this.colorScale = d3.scaleSequential(this.colorScheme)
         .domain(valueExtent)
     }
@@ -90,6 +90,7 @@ export class DataMap extends Plot {
       this.stateChanged(p, v, o)
     })
   }
+
 
   createBase() {
     this.nodes.base = d3.create("svg")
@@ -185,6 +186,13 @@ export class DataMap extends Plot {
 
   setFillColorFunction(fillColorFunction) {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
+    this.mapNode.selectAll("path")
+      .attr("fill", d => this.fillColorFunction(d.properties))
+  }
+
+  setColorScheme(scheme) {
+    this.colorScheme = scheme 
+    this.colorScale.interpolator(this.colorScheme)
     this.mapNode.selectAll("path")
       .attr("fill", d => this.fillColorFunction(d.properties))
   }
