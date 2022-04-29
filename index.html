@@ -31,11 +31,11 @@
       <div>
         <div class="file-select" >
           <label for="data-select">Geo File:</label>
-          <input type="file" id="geo-data-select"  accept=".json,.csv" style="display: none;" />
+          <input type="file" id="geo-data-select"  accept=".json,.geojson" style="display: none;" />
           <input type="button" value="Browse..." onclick="document.getElementById('geo-data-select').click();" />
           <label id="geo-data-select-label" class="file-select-label" for="geo-data-select">None</label>
         </div>
-
+<!-- 
         <span class="or"><b>OR</b></span>
 
         <span class="url-select">
@@ -44,7 +44,7 @@
           <button  id="get-button" type="button">Get</button>
         </span>
 
-        <span id="upload-error"></span>
+        <span id="upload-error"></span> -->
       </div>
 
       <div>
@@ -56,7 +56,7 @@
           <label id="row-data-select-label" class="file-select-label" for="row-data-select">None</label>
         </div>
 
-        <span class="or"><b>OR</b></span>
+        <!-- <span class="or"><b>OR</b></span>
 
         <span class="url-select">
           <label for="url-input">URL:</label>
@@ -64,36 +64,41 @@
           <button  id="get-button" type="button">Get</button>
         </span>
 
-        <span id="upload-error"></span>
+        <span id="upload-error"></span> -->
 
         <label style="margin-left: 10px" for="idfield-select">ID Field:</label>
-        <select class="field-select" id="idfield-select"></select>
+        <select class="field-select" id="idfield-select" disabled="true"></select>
       </div>
-      <div class="select-row">
 
       <div>
-        <div>
-          <label for="vfield-select">Value Field:</label>
-          <select class="field-select" id="vfield-select"></select>
-       </div>
-
-        <!-- <div class="field-stack" style="align-items: flex-end">
-          <div>
-            <label for="gfield-select">Group Field:</label>
-            <select class="field-select" id="gfield-select"></select>
-          </div>
-          <div>
-            <label for="g-select">Group:</label>
-            <select class="field-select" id="g-select"></select>
-          </div>
-        </div> -->
-
-        <div style="margin-left: auto; padding-top: 10px">
-          <button id="run-button" type="button">Run</button>
+        <!-- TODO: Flex box (or something), align ID select right.-->
+        <div class="file-select" >
+          <label for="weight-select">Weights File:</label>
+          <input type="file" id="weight-select"  accept=".gwt" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('weight-select').click();" />
+          <label id="weight-select-label" class="file-select-label" for="weight-select">None</label>
         </div>
-       
+
+        <span class="or"><b>OR</b></span>
+
+        <label style="margin-left: 10px" for="weight-method-select">Method:</label>
+        <select class="field-select" id="weight-method-select"></select>
+      </div>
+
+
+      <div class="select-row">
+        <div>
+          <div>
+            <label for="vfield-select">Value Field:</label>
+            <select class="field-select" id="vfield-select"></select>
+        </div>
       </div>
     </div>
+
+    <div style="margin-left: auto; padding-top: 10px">
+      <button id="run-button">Run</button>
+    </div>
+    
   </div>
 
   <div>

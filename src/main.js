@@ -21,6 +21,11 @@ dataConfig.addEventListener("click", () => {
   content.style.display = content.style.display == "block" ? "none" : "block" 
 })
 
+const weightMethodSelect = document.getElementById("weight-method-select")
+addOption(weightMethodSelect, "Rook")
+addOption(weightMethodSelect, "Queen")
+
+
 const controlsElement = document.getElementById("controls")
 
 const colorDiv = document.createElement("div")
@@ -95,6 +100,8 @@ const geoDataSelectLabel = document.getElementById("geo-data-select-label")
 geoDataSelectLabel.innerHTML = "None"
 const rowDataSelectLabel = document.getElementById("row-data-select-label")
 rowDataSelectLabel.innerHTML = "None"
+const weightMethodSelectLabel = document.getElementById("weight-select-label")
+weightMethodSelectLabel.innerHTML = "None"
 
 const idFieldSelect = document.getElementById("idfield-select")
 const vFieldSelect = document.getElementById("vfield-select")
@@ -107,6 +114,7 @@ let vField = null
 
 let geoData = null
 let rowData = null
+let weightMap = null
 
 let filename = null
 async function updateGeoData(data, vField = null) {
@@ -176,6 +184,30 @@ function uploadRowFile(file) {
   }
 }
 
+function uploadWeightFile(file) {
+  const reader = new FileReader()
+  function parseFile() {
+    const map = new Map()
+    const rowStrArr = reader.result.split('\n')
+    for (let i = 1; i < rowStrArr.length; i++) {
+      const row = rowStrArr[i].split(/\s+/)
+      let weights = map.get(row[0])
+      if (!weights) {
+        weights = new Map()
+        map.set(row[0], weights)
+      }
+      weights.set(row[1], parseFloat(row[2]))
+    }
+    weightMap = map
+    weightMethodSelectLabel = file.name
+  }
+
+  reader.addEventListener("load", parseFile, false);
+  if (file) {
+    reader.readAsText(file)
+  }
+}
+
 function addOption(select, field) {
   const option = document.createElement("option")
   option.setAttribute("value", field)
@@ -207,7 +239,7 @@ async function runData(geoData, rowData) {
     .domain(valueExtent)
 
   const geoda = await geodajs.New()
-  const geoSpatial = new GeoSpatial(geoData, {geoda: geoda})
+  const geoSpatial = new GeoSpatial(geoData, {geoda: geoda, weightMap: weightMap, neighborMethod: weightMethodSelect.value})
   moranResult = geoSpatial.moran(vField)
   radialMap = geoSpatial.localMoranRadials(moranResult)
 
@@ -240,6 +272,13 @@ document.getElementById("geo-data-select").addEventListener("change", e => {
 document.getElementById("row-data-select").addEventListener("change", e => {
   const file = e.target.files[0]
   uploadRowFile(file)
+  idFieldSelect.removeAttribute("disabled")
+})
+
+document.getElementById("weight-select").addEventListener("change", e => {
+  const file = e.target.files[0]
+  uploadWeightFile(file)
+  //idFieldSelect.removeAttribute("disabled")
 })
 
 runButton.addEventListener("click", () => {

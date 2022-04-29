@@ -17,6 +17,8 @@ export class GeoSpatial {
         geoda: null,
         valueData: null,
         idField: null,
+        weightMap: null,
+        neighborMethod: "Rook"
       },
       ...opts
     }
@@ -35,7 +37,12 @@ export class GeoSpatial {
     }
     
     this.id = this.geoda.readGeoJSON(this.objToBuffer(this.data))
-    this.calculateWeightMatrix()
+
+    if (this.weightMap) {
+      this.weightMatrix = this.rowMapToMatrix(this.weightMap)
+    } else {
+      this.calculateWeightMatrix(this.neighborMethod)
+    }
   }
 
   addFeatureProperties(features, propertyRows, idField) {
@@ -55,8 +62,13 @@ export class GeoSpatial {
     return new TextEncoder().encode(JSON.stringify(obj)).buffer
   }
 
-  calculateWeightMatrix() {
-    const weightResult = this.geoda.getRookWeights(this.id)
+  calculateWeightMatrix(method) {
+    let weightResult = null
+    if (method == "Rook") {
+      weightResult = this.geoda.getRookWeights(this.id)
+    } else if (method == "Queen") {
+      weightResult = this.geoda.getQueenWeights(this.id)
+    }
     this.w = weightResult
 
     let n = 0
@@ -74,11 +86,14 @@ export class GeoSpatial {
       map.set(feature.id, rowMap)
     }
 
-    this.weightMatrix = {
-      size: n,
+    this.weightMatrix = this.rowMapToMatrix(map)
+  }
+
+  rowMapToMatrix(map) {
+    return {
       map: map,
-      nRows: this.data.features.length,
-      nCols: this.data.features.length,
+      nRows: map.size,
+      nCols: map.size,
       get: function (i, j) {
         const rowMap = map.get(i)
         if (i < this.nRows && i >= 0 && j < this.nCols && j >= 0) {
@@ -100,7 +115,7 @@ export class GeoSpatial {
   // Will probably be slightly off.
   moran(vField) {
     // I think jsgeoda has High-Low and Low-High backwards, so don't rely on the labels.
-    const labels = ["Not significant", "High-High", "Low-Low", "Low-High", "High-Low"]
+    //const labels = ["Not significant", "High-High", "Low-Low", "Low-High", "High-Low"]
 
     const validIndices = new Set()
     const validFeatures = this.data.features.filter((feature,i) => {
@@ -121,39 +136,23 @@ export class GeoSpatial {
     for (let i = 0; i < 999; i++) {
       permResults.push(this.moranLite(d3.shuffle(values), ids))
     }    
-    permResults = d3.sort(permResults)
 
     const mean = d3.mean(validFeatures, d => d.properties[vField])
+    const deviation = d3.deviation(validFeatures, d => d.properties[vField])
 
     // TODO: Probably breaks when there are invalid features. FIX! 
     //const geodaResult = this.geoda.localMoran(this.w, validFeatures.map(d => d.properties[vField]))
-    const geodaResult = this.geoda.localMoran(this.w, 
-      this.data.features.map(d => d.properties[vField] != null ? d.properties[vField] : NaN))
+    // const geodaResult = this.geoda.localMoran(this.w, 
+    //   this.data.features.map(d => d.properties[vField] != null ? d.properties[vField] : NaN))
     
-    for (const ret of ["clusters", "lisaValues", "neighbors", "pvalues"]) {
-      geodaResult[ret] = geodaResult[ret].filter((d,i) => validIndices.has(i))
-    }    
-
-    for (let [i, validFeature] of validFeatures.entries()) {
-      validFeature.properties.label = labels[geodaResult.clusters[i]]
-      validFeature.properties.p = geodaResult.pvalues[i]
-
-      let pCutoff = null
-      const pCutoffs = [0.0001, 0.001, 0.01, 0.05]
-      for (const d of pCutoffs) {
-        if (validFeature.properties.p <= d) {
-          pCutoff = d
-          break
-        }
-      }
-
-      validFeature.properties.pCutoff = pCutoff
-    }
+    // for (const ret of ["clusters", "lisaValues", "neighbors", "pvalues"]) {
+    //   geodaResult[ret] = geodaResult[ret].filter((d,i) => validIndices.has(i))
+    // }    
 
     const localResults = []
     let m2 = 0 
     for (let [i, validFeature] of validFeatures.entries()) {
-      const z = validFeature.properties[vField] - mean
+      const z = (validFeature.properties[vField] - mean)/deviation
 
       m2 += z**2
       
@@ -163,7 +162,7 @@ export class GeoSpatial {
       for (const [neighborId, w] of weightRow.entries()) {
         const neighborValue = validFeatureMap.get(neighborId)
         if (neighborValue != null) {
-          const neighborZ = neighborValue.properties[vField] - mean
+          const neighborZ = (neighborValue.properties[vField] - mean) / deviation
           lag += w*neighborZ
           neighbors.push({
             id: neighborId, 
@@ -182,12 +181,11 @@ export class GeoSpatial {
         lag: lag, 
         raw: validFeature.properties[vField],
         neighbors: neighbors,
-        cluster: geodaResult.clusters[i],
-        label: labels[geodaResult.clusters[i]],
-        color: geodaResult.colors[geodaResult.clusters[i]],// TODO: Remove,
-        pValue: geodaResult.pvalues[i],
+        //_cluster: geodaResult.clusters[i],
+        //_label: labels[geodaResult.clusters[i]],
+        //_pValue: geodaResult.pvalues[i],
         pCutoff: validFeature.properties.pCutoff,
-        refLisa: geodaResult.lisaValues[i]
+        //_refLisa: geodaResult.lisaValues[i]
       })
     }
 
@@ -196,8 +194,67 @@ export class GeoSpatial {
 
     let globalMoran = 0
     for (const localResult of localResults) {
+
       localResult.localMoran = localResult.z * localResult.lag / m2
       globalMoran += localResult.localMoran
+
+    }
+
+    const permutes = 999 // TODO: Set to 999
+
+    // P Values
+    const zValues = localResults.map(d => d.z)
+    for (const [i, localResult] of localResults.entries()) {
+      const zValuesCopy = [...zValues]
+      zValuesCopy.splice(i, 1)
+      const weights = localResult.neighbors.map(d => d.w)
+
+      const Iis = []
+      for (let j = 0; j < permutes; j++) {
+        d3.shuffle(zValuesCopy)
+        const neighborZs = zValuesCopy.slice(0, localResult.neighbors.length)
+        Iis.push(this.localMoranLite(localResult.z, neighborZs, weights))
+      }
+
+      const actualIi = this.localMoranLite(localResult.z, localResult.neighbors.map(d => d.z), weights)
+      const refIis = Iis.filter(actualIi >= 0 ? d => d > 0 : d => d < 0).map(d => Math.abs(d))
+      refIis.sort((a, b) => a - b)
+
+      let minIndex = refIis.length
+      for (let j = 0; j < refIis.length; j++) {
+        if (Math.abs(actualIi) > refIis[refIis.length-j-1]) {
+          minIndex = j
+          break
+        }
+      }
+
+      //console.log(actualIi, pTest * (permutes + 1), localResult.pValue * (permutes + 1))
+      localResult.p = (minIndex + 1) / (permutes + 1)
+      if (localResult.p < 0.05) {
+        let label = ""
+        label = label + (localResult.z >= 0 ? "High" : "Low")
+        label = label + (localResult.lag >= 0 ? "-High" : "-Low")
+        localResult.label = label
+      } else {
+        localResult.label = "Not significant"
+      }
+    }
+
+    for (let [i, validFeature] of validFeatures.entries()) {
+      validFeature.properties.label = localResults[i].label//labels[geodaResult.clusters[i]]
+      validFeature.properties.p = localResults[i].p//geodaResult.pvalues[i]
+
+      let pCutoff = null
+      const pCutoffs = [0.0001, 0.001, 0.01, 0.05]
+      for (const d of pCutoffs) {
+        if (validFeature.properties.p <= d) {
+          pCutoff = d
+          break
+        }
+      }
+
+      localResults[i].pCutoff = pCutoff
+      validFeature.properties.pCutoff = pCutoff
     }
 
     for (const [i, localResult] of localResults.entries()) { 
@@ -208,13 +265,18 @@ export class GeoSpatial {
     const resultMap = new Map(localResults.map(d => [d.id, d]))
     for (const localResult of localResults) {
       for (const neighbor of localResult.neighbors) {
-        neighbor.localMoran = resultMap.get(neighbor.id).localMoran
+        const res = resultMap.get(neighbor.id)
+        neighbor.localMoran = res.localMoran
+        neighbor.pCutoff = res.pCutoff
+        neighbor.label = res.label
       }
     }
 
+    let permResFixed = permResults.map(d => Math.abs(d))
+    permResFixed = d3.sort(permResFixed)
     let nGreater = 0
-    for (let i = 0; i < permResults.length; i++) {
-      if (globalMoran < permResults[permResults.length-i]) {
+    for (let i = 1; i < permResults.length; i++) {
+      if (Math.abs(globalMoran) < permResults[permResults.length-i-1]) {
         nGreater = i
         break
       }
@@ -229,15 +291,17 @@ export class GeoSpatial {
     const localMorans = []
 
     const mean = d3.mean(values)
+    const deviation = d3.deviation(values)
+
     let m2 = 0 
     for (let i = 0; i < values.length; i++) {
-      const z = values[i] - mean  
+      const z = (values[i] - mean) / deviation
       m2 += z**2
       const weightRow = this.weightMatrix.getRow(ids[i])
       let lag = 0
       for (const [neighborId, w] of weightRow.entries()) {
         const neighborValue = values[idToIndex.get(neighborId)]
-        const neighborZ = neighborValue - mean
+        const neighborZ = (neighborValue - mean) /deviation
         lag += w*neighborZ
       }
       localMorans.push(z * lag)
@@ -250,6 +314,14 @@ export class GeoSpatial {
     })
 
     return globalMoran
+  }
+
+  localMoranLite(z, neighborZs, weights) {
+    let lag = 0
+    for (let i = 0; i < weights.length; i++) {
+      lag += neighborZs[i] * weights[i]
+    }
+    return z * lag 
   }
 
   localMoranRadials(moranResult) {
