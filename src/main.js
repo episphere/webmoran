@@ -8,6 +8,7 @@ import { default as geodajs } from 'https://cdn.skypack.dev/jsgeoda@0.2.3?min'
 // --- ASSUMPTIONS ---
 // * GeoJSON is FeatureCollection 
 
+
 let radialMap = null
 let dataMap = null
 let moranPlot = null
@@ -129,6 +130,7 @@ async function updateGeoData(data, vField = null) {
   })
 
   fields = [...fields]
+  vFieldSelect.innerHTML = ""
   fields.forEach(d => addOption(vFieldSelect, d))
 
   if (vField) {
@@ -141,6 +143,7 @@ function updateRowData(data) {
   // TODO: Smart fields. 
   rowData = data
 
+  idFieldSelect.innerHTML = ""
   const fields = Object.keys(data[0])
   fields.forEach(d => addOption(vFieldSelect, d))
   fields.forEach(d => addOption(idFieldSelect, d))
@@ -239,29 +242,41 @@ async function runData(geoData, rowData) {
     .domain(valueExtent)
 
   const geoda = await geodajs.New()
-  const geoSpatial = new GeoSpatial(geoData, {geoda: geoda, weightMap: weightMap, neighborMethod: weightMethodSelect.value})
-  moranResult = geoSpatial.moran(vField)
-  radialMap = geoSpatial.localMoranRadials(moranResult)
+  const geoSpatial = new GeoSpatial(geoData, {geoda: geoda, weightMap: weightMap, 
+      neighborMethod: weightMethodSelect.value})
 
-  const mapElement = document.getElementById("plot-datamap")
-  dataMap = new DataMap(mapElement, geoData, vField, 
-    { 
-      areaName: "county",
-      numberFormat: d => d.toFixed(5), colorScale: colorScale, width:400, height:400,
+    const progressElement = document.getElementById("progress")
+
+    geoSpatial.moran(vField, function(result) {
+      if (result.done) {
+        const {data, moranResult} = {...result}
+        geoData = data
+
+        radialMap = geoSpatial.localMoranRadials(moranResult)
+
+        const mapElement = document.getElementById("plot-datamap")
+        dataMap = new DataMap(mapElement, geoData, vField, 
+          { 
+            areaName: "county",
+            numberFormat: d => d.toFixed(5), colorScale: colorScale, width:400, height:400,
+          })
+
+        const moranElement = document.getElementById("plot-moran")
+        moranPlot = new MoranPlot(moranElement, moranResult,
+          {state: dataMap.state, numberFormat: d => d.toFixed(5), 
+            fixedColorScale: colorScale, radialMap: radialMap,
+            width:400, height:400, margin: {left:40, right:50, bottom:30, top:30}})
+        
+        let title = vField
+        if (title.length >= 17) {
+          title = title.slice(0, 13) + "..."
+        }
+        new ColorKey(colorElement, colorScale, "continuous", 
+          {width:95,  title: title, margin:{left: 30, right: 45, top: 10, bottom: 10,}})
+      } else {
+        progressElement.textContent = `${(result.progress*100).toFixed(0)}%`
+      }
     })
-
-  const moranElement = document.getElementById("plot-moran")
-  moranPlot = new MoranPlot(moranElement, moranResult,
-    {state: dataMap.state, numberFormat: d => d.toFixed(5), 
-      fixedColorScale: colorScale, radialMap: radialMap,
-      width:400, height:400, margin: {left:40, right:50, bottom:30, top:30}})
-  
-  let title = vField
-  if (title.length >= 17) {
-    title = title.slice(0, 13) + "..."
-  }
-  new ColorKey(colorElement, colorScale, "continuous", 
-    {width:95,  title: title, margin:{left: 30, right: 45, top: 10, bottom: 10,}})
 }
 
 document.getElementById("geo-data-select").addEventListener("change", e => {
@@ -282,7 +297,10 @@ document.getElementById("weight-select").addEventListener("change", e => {
 })
 
 runButton.addEventListener("click", () => {
-  runData(geoData, rowData)
+  //runData(geoData, rowData)
+  new Promise((resolve, reject) => {
+    runData(geoData, rowData)
+  })
 })
 
 d3.json("data/vi_props.json").then(d => {

@@ -235,10 +235,13 @@ export class MoranPlot extends Plot {
           this.scaleY(localMoran[this.yField])
         ]
 
-        this.tooltip.style("opacity", 1)
-        this.tooltip.style("left", `${pos[0] + 10}px`)
-        this.tooltip.style("top", `${pos[1] + 10}px`)
-        this.tooltip.html(tooltipText)    
+        if (!this.radialMap) {
+          this.tooltip.style("opacity", 1)
+          this.tooltip.style("left", `${pos[0] + 10}px`)
+          this.tooltip.style("top", `${pos[1] + 10}px`)
+          this.tooltip.html(tooltipText)   
+        }
+ 
 
         if (this.radialMap) {
           this.nodes.radial.selectAll("circle").remove()
