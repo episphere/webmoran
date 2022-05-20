@@ -119,7 +119,6 @@ export class GeoSpatial {
     //const labels = ["Not significant", "High-High", "Low-Low", "Low-High", "High-Low"]
 
 
-    console.log(this.weightMatrix.map)
     moranWorker.postMessage({data: this.data, weightMatrix: this.weightMatrix.map, vField: vField})
     moranWorker.addEventListener("message", function(e) {
       callback(e.data)

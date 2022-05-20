@@ -245,38 +245,39 @@ async function runData(geoData, rowData) {
   const geoSpatial = new GeoSpatial(geoData, {geoda: geoda, weightMap: weightMap, 
       neighborMethod: weightMethodSelect.value})
 
-    const progressElement = document.getElementById("progress")
+  const progressElement = document.getElementById("progress")
 
-    geoSpatial.moran(vField, function(result) {
-      if (result.done) {
-        const {data, moranResult} = {...result}
-        geoData = data
+  geoSpatial.moran(vField, function(result) {
+    if (result.done) {
+      const {data, moranResult} = {...result}
+      geoData = data
 
-        radialMap = geoSpatial.localMoranRadials(moranResult)
+      radialMap = geoSpatial.localMoranRadials(moranResult)
 
-        const mapElement = document.getElementById("plot-datamap")
-        dataMap = new DataMap(mapElement, geoData, vField, 
-          { 
-            areaName: "county",
-            numberFormat: d => d.toFixed(5), colorScale: colorScale, width:400, height:400,
-          })
 
-        const moranElement = document.getElementById("plot-moran")
-        moranPlot = new MoranPlot(moranElement, moranResult,
-          {state: dataMap.state, numberFormat: d => d.toFixed(5), 
-            fixedColorScale: colorScale, radialMap: radialMap,
-            width:400, height:400, margin: {left:40, right:50, bottom:30, top:30}})
-        
-        let title = vField
-        if (title.length >= 17) {
-          title = title.slice(0, 13) + "..."
-        }
-        new ColorKey(colorElement, colorScale, "continuous", 
-          {width:95,  title: title, margin:{left: 30, right: 45, top: 10, bottom: 10,}})
-      } else {
-        progressElement.textContent = `${(result.progress*100).toFixed(0)}%`
+      const mapElement = document.getElementById("plot-datamap")
+      dataMap = new DataMap(mapElement, geoData, vField, 
+        { 
+          areaName: "county",
+          numberFormat: d => d.toFixed(5), colorScale: colorScale, width:400, height:400,
+        })
+
+      const moranElement = document.getElementById("plot-moran")
+      moranPlot = new MoranPlot(moranElement, moranResult,
+        {state: dataMap.state, numberFormat: d => d.toFixed(5), 
+          fixedColorScale: colorScale, radialMap: radialMap,
+          width:400, height:400, margin: {left:40, right:50, bottom:30, top:30}})
+      
+      let title = vField
+      if (title.length >= 17) {
+        title = title.slice(0, 13) + "..."
       }
-    })
+      new ColorKey(colorElement, colorScale, "continuous", 
+        {width:95,  title: title, margin:{left: 30, right: 45, top: 10, bottom: 10,}})
+    } else {
+      progressElement.textContent = `${(result.progress*100).toFixed(0)}%`
+    }
+  })
 }
 
 document.getElementById("geo-data-select").addEventListener("change", e => {
