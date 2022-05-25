@@ -17,6 +17,11 @@
   padding-right: 10px;
 }
 
+.top-link {
+  display: inline-block;
+  padding-right: 2px;
+}
+
 body {
   font-family: "Helvetica";
   color: rgb(63, 63, 63);
@@ -153,4 +158,8 @@ input[type="radio"] {
 .select > select {
   width: 200px;
   margin-left: 15px;
+}
+
+#controls {
+  margin-bottom: 10px;
 }

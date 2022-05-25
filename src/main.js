@@ -12,7 +12,8 @@ import { default as geodajs } from 'https://cdn.skypack.dev/jsgeoda@0.2.3?min'
 let radialMap = null
 let dataMap = null
 let moranPlot = null
-let moranResult = null
+let result = null
+let expResult = null
 
 let colorScheme = d3.interpolateCividis
 
@@ -81,6 +82,29 @@ radialLabel.setAttribute("style", "margin-left: 3px")
 radialCheckDiv.appendChild(radialCheck)
 radialCheckDiv.appendChild(radialLabel)
 controlsElement.appendChild(radialCheckDiv)
+
+
+const exportButton = document.createElement("button")
+exportButton.innerHTML = "Export as CSV"
+exportButton.addEventListener("click", () => {
+
+  const fields = ["id", "z", "lag", "localMoran", "p", "label"]
+
+  const content = [["id", "z", "lag", "I", "p", "label"]]
+  content.push(["*", "", "", expResult.globalMoran, expResult.p, ""])
+
+  for (const localMoran of expResult.localMorans) {
+    content.push(fields.map(d => localMoran[d]))
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8," 
+      + content.map(d => d.join(",")).join("\n")
+
+  var encodedUri = encodeURI(csvContent)
+  window.open(encodedUri)
+})
+
+document.getElementById("export").appendChild(exportButton)
 
 
 document.getElementById("radio-mode-cluster").addEventListener("click", 
@@ -250,6 +274,11 @@ async function runData(geoData, rowData) {
   geoSpatial.moran(vField, function(result) {
     if (result.done) {
       const {data, moranResult} = {...result}
+      console.log(moranResult)
+      result =  "Hello"
+      expResult = moranResult
+      console.log(result)
+
       geoData = data
 
       radialMap = geoSpatial.localMoranRadials(moranResult)
