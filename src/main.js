@@ -274,10 +274,8 @@ async function runData(geoData, rowData) {
   geoSpatial.moran(vField, function(result) {
     if (result.done) {
       const {data, moranResult} = {...result}
-      console.log(moranResult)
       result =  "Hello"
       expResult = moranResult
-      console.log(result)
 
       geoData = data
 
