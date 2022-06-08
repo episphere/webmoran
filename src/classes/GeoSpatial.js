@@ -3,7 +3,7 @@ import {vectorAngle, rotate, isAngleInRange,
 import {default as geodajs} from 'https://cdn.skypack.dev/jsgeoda@0.2.3?min'
 import * as d3 from "https://cdn.skypack.dev/d3@7"
 
-const moranWorker = new Worker("/geo/src/moranWorker.js", { type: "module" })
+const moranWorker = new Worker("/webmoran/src/moranWorker.js", { type: "module" })
 
 // Workaround...
 // TODO: Fix Moran's I different from GeoDa. Perhaps because different z-values (why?)
