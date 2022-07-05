@@ -23,9 +23,9 @@ dataConfig.addEventListener("click", () => {
   content.style.display = content.style.display == "block" ? "none" : "block" 
 })
 
-const weightMethodSelect = document.getElementById("weight-method-select")
-addOption(weightMethodSelect, "Rook")
-addOption(weightMethodSelect, "Queen")
+// const weightMethodSelect = document.getElementById("weight-method-select")
+// addOption(weightMethodSelect, "Rook")
+// addOption(weightMethodSelect, "Queen")
 
 
 const controlsElement = document.getElementById("controls")
@@ -115,6 +115,27 @@ document.getElementById("radio-mode-significance").addEventListener("click",
   () => setMode("significance"))
 document.getElementById("radio-mode-moran").addEventListener("click", 
   () => setMode("moran"))
+
+// ---
+
+const fileConfigElement = document.getElementById("file-config")
+
+const geoFilePick = createFilePick("Geography:")
+const dataFilePick = createFilePick("Row Data:")
+const idSelect = createSelect("ID Field:", [], "Awaiting file...")
+const weightFilePick = createFilePick("<i>Weights</i>:")
+const valueFieldSelect = createSelect("Value Field:", [], "Awaiting file...")
+
+fileConfigElement.appendChild(geoFilePick)
+fileConfigElement.appendChild(document.createElement("div"))
+
+fileConfigElement.appendChild(dataFilePick)
+fileConfigElement.appendChild(idSelect)
+
+fileConfigElement.appendChild(weightFilePick)
+fileConfigElement.appendChild(document.createElement("div"))
+
+
 
 // ---
 
@@ -433,6 +454,82 @@ function keyDown(e) {
 }
 
 // -------
+
+function createSelect(labelText, options=[], placeholderText=null) {
+  const mainDiv = document.createElement("div")
+  mainDiv.classList.add("ginput-select")
+
+  const label = document.createElement("label")
+  label.innerHTML = labelText 
+
+  const select = document.createElement("select")
+
+  if (placeholderText) {
+    console.log(placeholderText)
+    const defaultOption = document.createElement("option")
+    defaultOption.classList.add("ginput-select-default")
+    defaultOption.innerHTML = placeholderText
+    defaultOption.setAttribute("disabled", "")
+    defaultOption.setAttribute("hidden", "")
+    defaultOption.setAttribute("selected", "")
+    select.appendChild(defaultOption)
+  }
+
+  for (const [str, value] of options) {
+    const option = document.createElement("option")
+    option.innerHTML = str
+    select.appendChild(option)
+  }
+
+  mainDiv.append(label)
+  mainDiv.append(select)
+  
+  return mainDiv
+}
+
+function createFilePick(labelText) {
+  const mainDiv = document.createElement("div")
+  mainDiv.classList.add("ginput-file")
+
+  const label = document.createElement("label")
+  label.innerHTML = labelText 
+
+  const select = document.createElement("select")
+  const defaultOption = document.createElement("option")
+  defaultOption.classList.add("ginput-select-default")
+  defaultOption.innerHTML = "Upload a file..."
+  defaultOption.setAttribute("disabled", "")
+  defaultOption.setAttribute("hidden", "")
+  defaultOption.setAttribute("selected", "")
+  select.appendChild(defaultOption)
+
+  const fileInput = document.createElement("input")
+  fileInput.setAttribute("id", "test")
+  fileInput.setAttribute("type", "file")
+  fileInput.style.display = "none"
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0]
+    const fileOption = document.createElement("option")
+    fileOption.innerHTML = file.name
+    select.appendChild(fileOption)
+    fileOption.setAttribute("selected", "")
+  })
+
+  const uploadButton = document.createElement("button")
+  uploadButton.innerHTML = `<span class="material-icons">file_upload</span>`
+  uploadButton.addEventListener("click", e => {
+    //fileInput.click()
+    document.getElementById("test").click()
+  })
+
+  mainDiv.append(label)
+  mainDiv.append(fileInput)
+  mainDiv.append(select)
+  mainDiv.append(uploadButton)
+  
+  //element.appendChild(mainDiv)
+  return mainDiv//element
+}
 
 function addFeatureProperties(features, propertyRows, idField) {
   const rowMap = new Map(propertyRows.map(d => [d[idField], d]))

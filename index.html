@@ -30,54 +30,52 @@
       <span class="collapsible-arrow material-icons">arrow_drop_down</span>
     </div>
     <div id="file-select-content" class="content">
-      Load and configure the data here. The 'Geo File' must be in the GeoJSON format. If the GeoJSON 
+
+      <div id="file-config"></div>
+
+      <!--Load and configure the data here. The 'Geo File' must be in the GeoJSON format. If the GeoJSON 
       file does not contain the properties you wish to analyse, then you can upload an optional 
       'Row File' which contains those properties. If you want to use custom weights then you can 
       upload a weights file in the GWT format. 
       <div>
+        <div class="select-row">
+          <label for="geo-select">Geography: </label>
+          <select class="field-select" id="geo-select"></select>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
         <div class="file-select" >
-          <label for="data-select">Geo File:</label>
+          <label for="data-select">GeoJSON File:</label>
           <input type="file" id="geo-data-select"  accept=".json,.geojson" style="display: none;" />
           <input type="button" value="Browse..." onclick="document.getElementById('geo-data-select').click();" />
           <label id="geo-data-select-label" class="file-select-label" for="geo-data-select">None</label>
         </div>
-<!-- 
-        <span class="or"><b>OR</b></span>
 
-        <span class="url-select">
-          <label for="url-input">URL:</label>
-          <input id="url-input" type="url">
-          <button  id="get-button" type="button">Get</button>
-        </span>
-
-        <span id="upload-error"></span> -->
       </div>
 
       <div>
-        <!-- TODO: Flex box (or something), align ID select right.-->
+        <div class="select-row">
+          <label for="data-select">Data: </label>
+          <select class="field-select" id="data-select"></select>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
         <div class="file-select" >
-          <label for="data-select">Row File:</label>
+          <label for="data-select">Data File:</label>
           <input type="file" id="row-data-select"  accept=".json,.csv" style="display: none;" />
           <input type="button" value="Browse..." onclick="document.getElementById('row-data-select').click();" />
           <label id="row-data-select-label" class="file-select-label" for="row-data-select">None</label>
         </div>
 
-        <!-- <span class="or"><b>OR</b></span>
 
-        <span class="url-select">
-          <label for="url-input">URL:</label>
-          <input id="url-input" type="url">
-          <button  id="get-button" type="button">Get</button>
-        </span>
-
-        <span id="upload-error"></span> -->
 
         <label style="margin-left: 10px" for="idfield-select">ID Field:</label>
         <select class="field-select" id="idfield-select" disabled="true"></select>
       </div>
 
       <div>
-        <!-- TODO: Flex box (or something), align ID select right.-->
         <div class="file-select" >
           <label for="weight-select">Weights File:</label>
           <input type="file" id="weight-select"  accept=".gwt" style="display: none;" />
@@ -97,16 +95,17 @@
           <div>
             <label for="vfield-select">Value Field:</label>
             <select class="field-select" id="vfield-select"></select>
-        </div>
+          </div>
       </div>
-    </div>
 
-    <div style="margin-left: auto; padding-top: 10px">
-      <button id="run-button">Run</button>
-      <span id="progress"></span>
+      <div style="margin-left: auto; padding-top: 10px">
+        <button id="run-button">Run</button>
+        <span id="progress"></span>
+      </div> -->
     </div>
-    
   </div>
+
+  <div id="data-controls"></div>
 
   <div>
     <div class="plot-row">
@@ -121,5 +120,5 @@
   
 </body>
 
-<script src="src/main.js" type="module"></script>
+<script src="src/main3.js" type="module"></script>
 </html>

@@ -1,3 +1,66 @@
+
+.ginput-file {
+  margin-left: 10px;
+}
+.ginput-file > * {
+  vertical-align: middle;
+}
+.ginput-file > label {
+  margin-right: 10px;
+}
+.ginput-file > select {
+  width: 220px;
+  font-size: 12px;
+}
+.ginput-file > label {
+  font-size: 12px;
+  font-weight: bold;
+}
+.ginput-file > button {
+  background: none;
+  border: none;
+}
+.ginput-file > button > span {
+  font-size: 20px;
+  vertical-align: middle;
+}
+.ginput-file > button:hover {
+  color: brown;
+  cursor: pointer; 
+}
+.ginput-select > label {
+  margin-right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.ginput-select > select {
+  width: 180px;
+  font-size: 12px;
+}
+
+/* === */
+
+#file-config {
+  width: 700px;
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  justify-items: end;
+}
+
+#select-area-field {
+  margin-top: 10px;
+}
+
+#data-controls {
+  margin-top: 15px;
+  display: flex;
+  column-gap: 20px;
+}
+
+/* === */
+
+
 .plot {
   position: relative;
   display: inline-block;
@@ -33,7 +96,8 @@ h1 {
 }
 
 .or {
-  margin-right: 60px;
+  margin-left: 40px;
+  margin-right: 40px;
 }
 
 .file-select {
@@ -85,13 +149,13 @@ h1 {
   /* padding-bottom: 8px; */
   font-size: .9em;
   background-color: #f1f1f1;
-  display: none;
+  display: block;
   overflow: hidden;
 }
 
 .select-row {
   margin-top: 12px;
-  display: flex;
+  display: inline-flex;
   /* align-items: flex-start; */
   column-gap: 15px;
   align-items: center;
