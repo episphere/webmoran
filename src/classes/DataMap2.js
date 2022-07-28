@@ -83,6 +83,7 @@ export class DataMap extends Plot {
     }
 
     this.setupData()
+    this.setVField(this.vField)
 
     if (!this.fillColorFunction) {
       this.fillColorFunction = this.fill
@@ -174,7 +175,6 @@ export class DataMap extends Plot {
         return this.fillColorFunction(d.properties)
       })
 
-    
   }
 
   setVField(vField, reverse = false, centerZero = false) {
@@ -196,6 +196,7 @@ export class DataMap extends Plot {
 
   setFillColorFunction(fillColorFunction) {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
+    console.log(this.colorScale.domain(), this.colorScale.range())
     this.mapNode.selectAll("path")
       .attr("fill", d => this.fillColorFunction(d.properties))
   }
@@ -248,6 +249,7 @@ export class DataMap extends Plot {
   }
  
   stateChanged(p, v, o) {
+
     if (p == "focused" && v != o) {
       this.highlight([v], this.state.select.has(o) ? [] : [o])
 

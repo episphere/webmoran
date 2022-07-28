@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="utf-8">
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <!-- <script src="https://unpkg.com/topojson-client@3"></script> -->
+  <script src="https://unpkg.com/topojson-server@3"></script>
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+
+
+</head>
+
+<body>
+
+  <div class="top">
+    <div class="top-element"><h1>WebMoran</h1></div>
+    <span class="top-link"> [<a href="https://github.com/episphere/webmoran">code</a>] </span>
+    <span class="top-link"> [<a href="https://youtu.be/zDnN2WpqNM0">video</a>] </span>
+  </div>
+
+  <div class="file-select-block">
+    <div id="data-config" class="collapsible">
+      Data Configuration
+      <span class="collapsible-arrow material-icons">arrow_drop_down</span>
+    </div>
+    <div id="file-select-content" class="content">
+
+      <div id="file-config"></div>
+
+      <!--Load and configure the data here. The 'Geo File' must be in the GeoJSON format. If the GeoJSON 
+      file does not contain the properties you wish to analyse, then you can upload an optional 
+      'Row File' which contains those properties. If you want to use custom weights then you can 
+      upload a weights file in the GWT format. 
+      <div>
+        <div class="select-row">
+          <label for="geo-select">Geography: </label>
+          <select class="field-select" id="geo-select"></select>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
+        <div class="file-select" >
+          <label for="data-select">GeoJSON File:</label>
+          <input type="file" id="geo-data-select"  accept=".json,.geojson" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('geo-data-select').click();" />
+          <label id="geo-data-select-label" class="file-select-label" for="geo-data-select">None</label>
+        </div>
+
+      </div>
+
+      <div>
+        <div class="select-row">
+          <label for="data-select">Data: </label>
+          <select class="field-select" id="data-select"></select>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
+        <div class="file-select" >
+          <label for="data-select">Data File:</label>
+          <input type="file" id="row-data-select"  accept=".json,.csv" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('row-data-select').click();" />
+          <label id="row-data-select-label" class="file-select-label" for="row-data-select">None</label>
+        </div>
+
+
+
+        <label style="margin-left: 10px" for="idfield-select">ID Field:</label>
+        <select class="field-select" id="idfield-select" disabled="true"></select>
+      </div>
+
+      <div>
+        <div class="file-select" >
+          <label for="weight-select">Weights File:</label>
+          <input type="file" id="weight-select"  accept=".gwt" style="display: none;" />
+          <input type="button" value="Browse..." onclick="document.getElementById('weight-select').click();" />
+          <label id="weight-select-label" class="file-select-label" for="weight-select">None</label>
+        </div>
+
+        <span class="or"><b>OR</b></span>
+
+        <label style="margin-left: 10px" for="weight-method-select">Method:</label>
+        <select class="field-select" id="weight-method-select"></select>
+      </div>
+
+
+      <div class="select-row">
+        <div>
+          <div>
+            <label for="vfield-select">Value Field:</label>
+            <select class="field-select" id="vfield-select"></select>
+          </div>
+      </div>
+
+      <div style="margin-left: auto; padding-top: 10px">
+        <button id="run-button">Run</button>
+        <span id="progress"></span>
+      </div> -->
+    </div>
+  </div>
+
+  <div id="data-controls"></div>
+
+  <div>
+    <div class="plot-row">
+      <div class="plot" id="plot-key" style="margin-block: auto"></div>
+      <div class="plot" id="plot-datamap"></div>
+      <div class="plot" id="plot-moran"></div>
+    </div>
+  </div>
+
+  <div id="controls"></div>
+  <div id="export"></div>
+  
+</body>
+
+<script src="src/main3.js" type="module"></script>
+</html>

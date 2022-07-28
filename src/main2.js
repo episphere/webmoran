@@ -153,7 +153,7 @@ async function updateRowData(data) {
   optionSelected = false 
   for (const field of Object.keys(rowData[0])) {
     if (field == vField) {
-      optionSelected = true 
+      optionSelected = true
     }
     addOption(valueSelectElem, field, field == vField)
   }

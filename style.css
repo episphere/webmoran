@@ -123,6 +123,8 @@ h1 {
   font-size: .95em;
 }
 
+
+
 .collapsible {
   background-color: brown;
   color: white;
@@ -149,7 +151,7 @@ h1 {
   /* padding-bottom: 8px; */
   font-size: .9em;
   background-color: #f1f1f1;
-  display: block;
+  display: none;
   overflow: hidden;
 }
 

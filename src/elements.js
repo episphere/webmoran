@@ -22,16 +22,22 @@ export function createFilePick(labelText, parser, changeListener) {
     const fileOption = document.createElement("option")
     fileOption.innerHTML = file.name
     fileOption.value = file.name
-    parser(file)
-    select.appendChild(fileOption)
-    fileOption.setAttribute("selected", "")
+    parser(file).then(() => {
+      select.appendChild(fileOption)
+      fileOption.setAttribute("selected", "")
+      select.dispatchEvent(new Event("change"))
+    })
+    
+    //const event = new Event("change")
+    //event.target = select
+    //changeListener(event)
+   
   })
 
   const uploadButton = document.createElement("button")
   uploadButton.innerHTML = `<span class="material-icons">file_upload</span>`
   uploadButton.addEventListener("click", e => {
     fileInput.click()
-   
   })
 
   mainDiv.append(label)
@@ -44,7 +50,7 @@ export function createFilePick(labelText, parser, changeListener) {
   return mainDiv
 }
 
-export function createSelect(labelText, options=[], placeholderText=null) {
+export function createSelect(labelText, options=[], placeholderText=null, placeholderSelectable=false) {
   const mainDiv = document.createElement("div")
   mainDiv.classList.add("ginput-select")
 
@@ -57,8 +63,10 @@ export function createSelect(labelText, options=[], placeholderText=null) {
     const defaultOption = document.createElement("option")
     defaultOption.classList.add("ginput-select-default")
     defaultOption.innerHTML = placeholderText
-    defaultOption.setAttribute("disabled", "")
-    defaultOption.setAttribute("hidden", "")
+    if (!placeholderSelectable) {
+      defaultOption.setAttribute("disabled", "")
+      defaultOption.setAttribute("hidden", "")
+    }
     defaultOption.setAttribute("selected", "")
     select.appendChild(defaultOption)
   }
@@ -83,4 +91,26 @@ export function addOption(select, field, selected=false) {
     option.setAttribute("selected", "")
   }
   select.appendChild(option)
+}
+
+export function clearSelect(select, clearPlaceholder=false) {
+  const placeholder = [...select.getElementsByClassName("ginput-select-default")][0]
+  placeholder.setAttribute("selected", "")
+  placeholder.removeAttribute("disabled")
+  //placeholder.removeAttribute("hidden")
+  //select.innerHTML = ""
+  for (let i = select.options.length-1; i >= 0; i--) {
+    select.remove(i)
+  }
+  select.appendChild(placeholder)
+}
+
+export function selectOption(select, value) {
+  for (const option of select.getElementsByTagName("option")) {
+    if (value == option.value) {
+      option.setAttribute("selected", "")
+    } else {
+      option.removeAttribute("selected")
+    }   
+  }
 }
