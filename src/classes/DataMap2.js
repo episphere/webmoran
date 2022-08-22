@@ -69,7 +69,7 @@ export class DataMap extends Plot {
     this.path.projection(projection)
 
     for (const feature of this.data.features) {
-      feature.center = this.path.centroid(feature)
+      feature.centroid = this.path.centroid(feature)
       feature.bounds = this.path.bounds(feature)
     }
 
@@ -196,7 +196,6 @@ export class DataMap extends Plot {
 
   setFillColorFunction(fillColorFunction) {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
-    console.log(this.colorScale.domain(), this.colorScale.range())
     this.mapNode.selectAll("path")
       .attr("fill", d => this.fillColorFunction(d.properties))
   }

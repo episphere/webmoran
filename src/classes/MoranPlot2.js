@@ -199,10 +199,7 @@ export class MoranPlot extends Plot {
     this.moranTip.style("top", `${this.scaleY(points[1][1]) - 10}px`)
     this.moranTip.style("text-align", `right`)
     
-    const content = [`<b>I</b> = ${this.moranResult.globalMoran.toFixed(3)}`]
-    content.push(`<b>p'</b> = ${this.moranResult.p != null ? 
-      this.moranResult.p.toFixed(3) : "..."}`)
-    this.moranTip.html(content.join("</br>"))    
+    this.updateTooltip()
 
     // this.nodes.moranValue.selectAll("text")
     //   .data([this.moranResult.globalMoran])
@@ -211,6 +208,17 @@ export class MoranPlot extends Plot {
     //     .attr("y", this.scaleY(points[1][1]))
     //     .attr("font-size", "10px")
     //     .html(`Moran's I: </br> ${this.moranResult.globalMoran}`)
+  }
+
+  setMoranResult(moranResult) {
+    this.moranResult = moranResult
+  }
+
+  updateTooltip() {
+    const content = [`<b>I</b> = ${this.moranResult.globalMoran.toFixed(3)}`]
+    content.push(`<b>p'</b> = ${this.moranResult.p != null ? 
+      this.moranResult.p.toFixed(3) : "..."}`)    
+    this.moranTip.html(content.join("</br>"))    
   }
 
   stateChanged(p, v, o) {
@@ -254,11 +262,11 @@ export class MoranPlot extends Plot {
           this.nodes.radial.selectAll("path")
             .data(localRadial.segments)
             .join("path")
-            .attr("fill", d => this.fillColorFunction(d.data))
+            .attr("fill", d => this.fillColorFunction(d.data.localMoran))
             .attr("d", d => {
               const arc = d3.arc()
                 .innerRadius(this.radialInnerRadius)
-                .outerRadius(this.scaleRadial(d.data.z))
+                .outerRadius(this.scaleRadial(d.data.localMoran.z))
                 .startAngle(d.startAngle)
                 .endAngle(d.endAngle)
               return arc(d)
@@ -297,19 +305,18 @@ export class MoranPlot extends Plot {
       .attr("fill", d => this.fillColorFunction(d))
     this.nodes.radial.selectAll("path")
       .attr("fill", d => {
-        return this.fillColorFunction(d.data)
+        return this.fillColorFunction(d.data.localMoran)
       })
   }
 
   setFillColorFunction(fillColorFunction) {
     this.fillColorFunction = fillColorFunction ? fillColorFunction : this.fill
-    console.log(this.colorScale.domain(), this.colorScale.range())
 
     this.nodes.points.selectAll("circle")
       .attr("fill", d => this.fillColorFunction(d))
     this.nodes.radial.selectAll("path")
       .attr("fill", d => {
-        return this.fillColorFunction(d.data)
+        return this.fillColorFunction(d.data.localMoran)
       })
   }
 

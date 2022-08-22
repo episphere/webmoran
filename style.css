@@ -180,8 +180,12 @@ h1 {
   display: inline-flex;
 }
 
+.radio-select > span {
+  font-weight: bold;
+}
+
 .radio-select > label {
-  margin-right: 15px;
+  margin-right: 10px;
 }
 
 .radio-select > input {
@@ -226,6 +230,18 @@ input[type="radio"] {
   margin-left: 15px;
 }
 
+
+
 #controls {
   margin-bottom: 10px;
+  width: 905px;
+}
+
+#progress {
+  font-size: 14px;
+  align-self: center;
+}
+
+#radial-check {
+  margin-left: auto;
 }

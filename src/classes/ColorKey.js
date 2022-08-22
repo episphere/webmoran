@@ -114,7 +114,7 @@ export class ColorKey {
         .join("text")
           .attr("x", this.margin.left + r + 7)
           .attr("y", d => scaleBand(d) + scaleBand.bandwidth()/2 + 4)
-          .text(d => d)
+          .text(d => d + "")
           .style("font-size", "8px")
           .style("font-family", "sans-serif")
     }

@@ -376,7 +376,6 @@ const pColorFunction = d => {
   return d.pCutoff ? pColorScale(d.pCutoff) : "whitesmoke"
 }
 
-
 function setMode(mode) {
   if (mode == "cluster") {
     document.getElementById("radio-mode-cluster").checked = true
