@@ -10,7 +10,7 @@ import * as geo from "./geospatial.js"
 // TODO: Area name configure
 
 //const WORKER_PATH = "src/workerMoran.js" // For local
-const WORKER_PATH = "/webmoran/src/moranWorker.js" // For live
+const WORKER_PATH = "/webmoran/src/workerMoran.js" // For live
 
 // TODO: Update p value in Moran plot
 
