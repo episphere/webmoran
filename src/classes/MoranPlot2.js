@@ -58,6 +58,15 @@ export class MoranPlot extends Plot {
     this.state.addListener((p, v, o) => {
       this.stateChanged(p, v, o)
     })
+
+    // Kind of hacky
+    const resultMap = new Map(this.moranResult.localMorans.map(d => [d.id, d]))
+    for (const radial of this.radialMap.values()) {
+      for (const segment of radial.segments) {
+        segment.localMoran = resultMap.get(segment.data.id)
+      }
+    }
+
   }
 
   createBase() {
@@ -262,11 +271,12 @@ export class MoranPlot extends Plot {
           this.nodes.radial.selectAll("path")
             .data(localRadial.segments)
             .join("path")
-            .attr("fill", d => this.fillColorFunction(d.data.localMoran))
+            .attr("fill", d => this.fillColorFunction(d.localMoran))
             .attr("d", d => {
               const arc = d3.arc()
                 .innerRadius(this.radialInnerRadius)
-                .outerRadius(this.scaleRadial(d.data.localMoran.z))
+                .outerRadius(d.localMoran && !isNaN(d.localMoran.z) ? 
+                  this.scaleRadial(d.localMoran.z) : this.radialInnerRadius)
                 .startAngle(d.startAngle)
                 .endAngle(d.endAngle)
               return arc(d)
@@ -305,7 +315,7 @@ export class MoranPlot extends Plot {
       .attr("fill", d => this.fillColorFunction(d))
     this.nodes.radial.selectAll("path")
       .attr("fill", d => {
-        return this.fillColorFunction(d.data.localMoran)
+        return this.fillColorFunction(d.localMoran)
       })
   }
 
@@ -316,12 +326,12 @@ export class MoranPlot extends Plot {
       .attr("fill", d => this.fillColorFunction(d))
     this.nodes.radial.selectAll("path")
       .attr("fill", d => {
-        return this.fillColorFunction(d.data.localMoran)
+        return this.fillColorFunction(d.localMoran)
       })
   }
 
   fill(d) {
-    return this.colorScale(d[this.colorField])
+    return d && d[this.colorField] != null ? this.colorScale(d[this.colorField]) : "black"
   }
 
   setColorField(colorField) {

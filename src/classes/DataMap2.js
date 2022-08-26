@@ -115,7 +115,7 @@ export class DataMap extends Plot {
         .attr("stroke", this.outlineColorFunction)
         .attr("stroke-width", .5)
         .on("mouseenter", (_, d) => this.state.focused = d.id)
-        //.on("mouseleave", () => this.state.focus = null)
+        .on("mouseleave", () => this.state.focused = null)
         .on("click", (e, d) => {
           e.stopPropagation()
           if (this.state.select.has(d.id)) {

@@ -7,7 +7,8 @@ import {vectorAngle, rotate, isAngleInRange,
 
 // TODO: Test p-values (esp. global)
 
-export function calculateWeightMatrix(geoJson, method="Queen") {
+export function 
+calculateWeightMatrix(geoJson, method="Queen") {
   const topology = toposerver.topology(geoJson.features)
   const objects = [...Object.values(topology.objects)]
   
@@ -61,24 +62,29 @@ export async function calculateMoran(features, vField, weightMatrix, opts={}) {
   const localResultMap = new Map(localResults.map(d => [d.id, d]))
 
   let m2 = 0
-  for (let localResult of localResults) {
+  localResults.forEach((localResult, i) => {
+
     const weightRow = weightMatrix.get(localResult.id)
     
     let lag = 0
     const neighbors = []
     for (const [neighborId, w] of weightRow.entries()) {
       const neighborResult = localResultMap.get(neighborId)
-      lag += w*neighborResult.z
+      if (neighborResult) {
+        lag += w*neighborResult.z
+      }
+      
       neighbors.push({
         w: w,
-        localMoran: neighborResult
+        //localMoran: neighborResult
+        id: neighborId,
       })
     }
 
     localResult.lag = lag
     localResult.neighbors = neighbors
     m2 += localResult.z**2
-  }
+  })
 
   let globalMoran = 0
   for (const localResult of localResults) {
@@ -110,8 +116,10 @@ export async function calculatePValues(moranResult, weightMatrix, opts={}) {
 
   // Calculate local moran p-values
   const localResults = moranResult.localMorans
+  const localResultMap = new Map(localResults.map(d => [d.id, d]))
   const zValues = localResults.map(d => d.z)
   localResults.forEach((localResult, i) => {
+
     const zValuesCopy = [...zValues]
     zValuesCopy.splice(i, 1)
     const weights = localResult.neighbors.map(d => d.w)
@@ -123,11 +131,15 @@ export async function calculatePValues(moranResult, weightMatrix, opts={}) {
       Iis.push(localMoranLite(localResult.z, neighborZs, weights))
     }
 
+    const neighbors = localResult.neighbors.map(d => localResultMap.get(d.id))
+      .filter(d => d)
+
     const actualIi = localMoranLite(localResult.z, 
-      localResult.neighbors.map(d => d.localMoran.z), weights)
+      neighbors.map(d => d.z), weights)
     const refIis = Iis.filter(actualIi >= 0 ? d => d > 0 : d => d < 0).map(d => Math.abs(d))
     refIis.sort((a, b) => b - a)
     let minIndex = refIis.findIndex(d => Math.abs(actualIi) > d)
+
 
     localResult.p = (minIndex + 1) / (permutations + 1)
     if (localResult.p < 0.05) {
@@ -141,7 +153,7 @@ export async function calculatePValues(moranResult, weightMatrix, opts={}) {
 
     localResult.pCutoff = [0.0001, 0.001, 0.01, 0.05].find(d => localResult.p < d)
     
-    progressCallback(i/localResults.length)
+    if (i % 50 == 0) progressCallback(i/localResults.length)
   })
 
   // Calculate global moran p-values
@@ -161,17 +173,17 @@ export async function calculatePValues(moranResult, weightMatrix, opts={}) {
   moranResult.p = (nGreater+1) / (permMorans.length +1)
   
   progressCallback(1)
-  return localResults
+  return moranResult//localResults
 }
 
 export function localMoranRadials(moranResult, centroidMap) {
   const radialMap = new Map()
+  const localResultMap = new Map(moranResult.localMorans.map(d => [d.id, d]))
   for (const localMoran of moranResult.localMorans) {
     // We need the weight / z pairs (localMoran.neighbors).
     // And the target angles for rotation. 
 
     for (let neighbor of localMoran.neighbors) {
-      neighbor = neighbor.localMoran
 
       const c1 = centroidMap.get(localMoran.id)
       const c2 = centroidMap.get(neighbor.id)
@@ -184,7 +196,7 @@ export function localMoranRadials(moranResult, centroidMap) {
     }
 
     const pie = d3.pie()
-      .sort((a,b) => a.localMoran.angle - b.localMoran.angle)
+      .sort((a,b) => a.angle - b.angle)
       .value(d => d.w)
       .padAngle(0.05)
     const segments = pie(localMoran.neighbors)
@@ -208,7 +220,7 @@ function simpleSegmentMatch(segments, N = 8) {
       rotate(d.startAngle, testTheta),
       rotate(d.endAngle, testTheta)
     ])
-    const distances = segments.map((d, j) => angleRangeDistance(d.data.localMoran.angle, ranges[j]))
+    const distances = segments.map((d, j) => angleRangeDistance(d.data.angle, ranges[j]))
     const distance = d3.sum(distances)
     if (distance < minDistance) {
       theta = testTheta
@@ -264,7 +276,7 @@ function getNeighborsPoint(topoObj, topology) {
   const xFactor = xRange[1] - xRange[0]
   const yFactor = yRange[1] - yRange[0]
 
-  const gridN = 100
+  const gridN = 1000 // This needs to be balanced for performance. 
   const cellWidth = xFactor / gridN
   const cellHeight = yFactor / gridN
 

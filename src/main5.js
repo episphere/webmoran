@@ -6,6 +6,9 @@ import { ColorKey } from "./classes/ColorKey.js"
 
 import * as geo from "./geospatial.js"
 
+// TODO: JSON support
+// TODO: Area name configure
+
 //const WORKER_PATH = "src/workerMoran.js" // For local
 const WORKER_PATH = "/webmoran/src/moranWorker.js" // For live
 
@@ -194,11 +197,13 @@ class Check {
     props = {
       label: "",
       handleChange: () => null,
+      value: true,
       ...props
     }
 
     this.handleChange = props.handleChange
     this.label = props.label
+    this.value = props.value
 
     this.element = element 
     this.div = document.createElement("div")
@@ -209,8 +214,11 @@ class Check {
 
     const check = document.createElement("input")
     check.setAttribute("type", "checkbox")
-    check.setAttribute("checked", "")
+    if (this.value) {
+      check.setAttribute("checked", "")
+    }
     check.addEventListener("click", () => {
+      this.value = check.checked
       this.handleChange(check.checked)
     })
 
@@ -335,7 +343,7 @@ class DataFileManager {
       this.geoFileSelect = new FileSelect({
         label: "Geo File:",
         defaultFileDataWrappers: [
-          {name: "us_topology_county.json", data: geoDataCounty},
+          {name: "us_topology_county.geojson", data: geoDataCounty},
           {name: "us_topology_state.geojson", data: geoDataState},
         ],
         handleChange: this.handleGeoChange,
@@ -344,7 +352,7 @@ class DataFileManager {
       this.geoData = this.geoFileSelect.value.data
       
       this.rowFileSelect = new FileSelect({
-        label: "Row File:",
+        label: "Data File:",
         defaultFileDataWrappers: [
           {name: "chr_data_2022_small.csv", data: rowData},
         ],
@@ -365,7 +373,7 @@ class DataFileManager {
   }
 
   handleGeoChange(value) {
-    this.geoData = value.data 
+    this.geoData = JSON.parse(value.data)
     this.rowFileSelect.clear()
   }
   
@@ -383,10 +391,17 @@ class DataFileManager {
       }
     })
 
-    this.idFieldSelect.updateValues([...fields])
+    const ids = new Set(this.geoData.features.map(d => d.id))
+    const possibleIdFields = [...fields].map(field => 
+      [field, this.rowData.filter(row => ids.has(row[field])).length])
+    possibleIdFields.sort((a,b) => b[1] - a[1])
+    const defaultField = possibleIdFields.length > 0 ? possibleIdFields[0][0] : null
+
+    this.idFieldSelect.updateValues([...fields], defaultField)
   }
   
   handleIdFieldChange(value) {
+    this.idField = value
     this.processData()
   }
 
@@ -428,6 +443,9 @@ class DataDetailsManager {
       ...props,
     }
 
+    // We need to keep this to prevent values being erased by the parseFloat
+    //this.propertiesMap = this.data.features.forEach(d => [d.id, d.properties])
+
     this.data = props.data
     this.usedFields = props.usedFields
     this.callback = props.callback
@@ -455,6 +473,8 @@ class DataDetailsManager {
   }
 
   handleChange() {
+    this.previousValueField = this.valueField
+
     this.valueField = this.valueFieldSelect.value 
     this.subAreaField = this.subAreaFieldSelect.value 
     this.subArea = this.subAreaSelect.value
@@ -463,9 +483,9 @@ class DataDetailsManager {
   }
 
 
-  updateData(data, trigger = true) {
+  updateData(data, trigger = true, usedFields = []) {
     this.data = data
-
+    
     const fields = new Set()
     for (const feature of this.data.features) {
       for (const field of Object.keys(feature.properties)) {
@@ -473,21 +493,33 @@ class DataDetailsManager {
       }
     }
 
-    this.valueFieldSelect.updateValues([...fields], this.valueField, false)
-    this.subAreaFieldSelect.updateValues([...fields], this.subAreaField, false)
+    const usedFieldsSet = new Set(usedFields)
+    const possibleValueFields = [...fields].map(field => 
+      [field, usedFieldsSet.has(field) ? -1 : this.data.features.filter(d => !isNaN(d.properties[field])).length])
+    possibleValueFields.sort((a,b) => b[1] - a[1])
+
+    const defaultValueField = 
+      possibleValueFields.length < 1 || fields.has(this.valueFieldSelect.defaultValue) || fields.has(this.valueField) ? 
+      this.valueField : possibleValueFields[0][0]
+
+    this.valueFieldSelect.updateValues([...fields], defaultValueField, false)
+    this.subAreaFieldSelect.updateValues(["NONE", ...fields], this.subAreaField, false)
 
     this.valueField = this.valueFieldSelect.value 
     this.subAreaField = this.subAreaFieldSelect.value 
 
     const areas = new Set()
-    for (const feature of this.data.features) {
-      const area = feature.properties[this.subAreaField]
-      if (area) {
-        areas.add(area)
+    if (this.subAreaField != "NONE") {
+      for (const feature of this.data.features) {
+        const area = feature.properties[this.subAreaField]
+        if (area) {
+          areas.add(area)
+        }
       }
     }
 
     this.subAreaSelect.updateValues([...areas].sort(), this.subArea, false)
+   
     this.subArea = this.subAreaSelect.value
 
     this.processData()
@@ -495,18 +527,25 @@ class DataDetailsManager {
 
   processData() {
 
-    let features = this.data.features.filter(
-      feature => feature.properties[this.subAreaField] == this.subArea)
-    
+    //this.previousValues 
+    //if (this.previousValueField)
+
+    let features = this.data.features
+    if (this.subAreaField != "NONE") {
+      features = features.filter(feature => feature.properties[this.subAreaField] == this.subArea)
+    }
+
+    this.previousValues = features.map(d => d.properties[this.previousValueField])
+
     features = features.map(feature => ({
       ...feature,
-      properties: feature.properties,
-
+      properties: {...feature.properties},
     }))
 
     features.forEach(feature => {
       feature.properties[this.valueField] = parseFloat(feature.properties[this.valueField])
     })
+
 
     this.callback({
       type: "FeatureCollection",
@@ -587,12 +626,10 @@ class WeightManager {
       for (const toMap of weightMatrix.values()) {
         const sum = d3.sum([...toMap.values()])
         for (const [k,v] of toMap.entries()) {
-          console.log(k, v, sum, v/sum)
           toMap.set(k, v/sum)
         }
       }
 
-      console.log(weightMatrix)
     } else if (fileWrapper.name.toLowerCase().endsWith(".gal")) {
       for (let i = 1; i < rows.length-1; i+=2) {
         const firstRow = rows[i] 
@@ -645,11 +682,13 @@ class CalculationManager {
       this.initialCallback(result)
       return result  
     }).then(result => {
+      
       this.workerMoran.postMessage({
         moranResult: result, 
         weightMatrix: weightMatrix,
-        permutations: 999
+        permutations: 999 
       })
+
       // geo.calculatePValues(result, weightMatrix, {
       //   progressCallback: p => p
       // }).then(result => {
@@ -667,14 +706,23 @@ class WebMoran {
     this.handleFinalResults = this.handleFinalResults.bind(this)
     this.handleSchemeChange = this.handleSchemeChange.bind(this)
     this.handleModeSelect = this.handleModeSelect.bind(this)
+    this.updateDataDetails = this.updateDataDetails.bind(this)
     this.keyDown = this.keyDown.bind(this)
 
     this.weightManager = new WeightManager(this.handleWeightChange)
     this.calculationManager = new CalculationManager(this.handleInitialResults, this.handleFinalResults)
+    this.dataDetailsManager = new DataDetailsManager({
+      callback: this.updateDataDetails
+    })
+    this.dataFileManager = new DataFileManager(data => {
+      this.dataDetailsManager.updateData(data, true, [this.dataFileManager.idField])
+    })
+
+    this.progressElement = document.getElementById("progress")
 
     this.colorSchemeSelect = new Select({
       label: "Colors:",
-      values: [], handleChange: this.handleSchemeChange, defaultValue: "Reds", 
+      values: [], handleChange: this.handleSchemeChange, defaultValue: "Cividis", 
     }, document.getElementById("color-scheme-select"))
 
     const clusterColorScale = d3.scaleOrdinal(
@@ -707,11 +755,11 @@ class WebMoran {
 
     this.radialCheck = new Check({
       label: "Radial",
-      handleChange: value => this.moranPlot.radialMap = value ?  this.radialMap : null
+      handleChange: value => this.moranPlot.radialMap = (value ? this.radialMap : null)
     }, document.getElementById("radial-check"))
 
     d3.json("data/colorSchemes.json").then(schemes => {
-      this.colorSchemeSelect.updateValues(schemes.map(d => [d[1], d[0]]), "Reds")
+      this.colorSchemeSelect.updateValues(schemes.map(d => [d[1], d[0]]), "Cividis")
 
       this.modeMap = new Map([
         ["value", {
@@ -776,6 +824,8 @@ class WebMoran {
   updateDataDetails(data, vField) {
     this.data = data
     this.vField = vField
+
+    //this.progressElement.innerHTML = `Calculating weights...`
     this.weightManager.calculateWeights(data)
   }
 
@@ -786,6 +836,14 @@ class WebMoran {
 
   handleInitialResults(moranResult) {
 
+    if (this.modeSelect.value == "significance" || this.modeSelect.value == "cluster") {
+      this.modeSelect.setValue("value")
+    }
+    
+    this.modeSelect.setValueDisabled("significance", true)
+    this.modeSelect.setValueDisabled("cluster", true)
+
+    
     const valueExtent = d3.extent(this.data.features.filter(
       d => !isNaN(parseFloat(d.properties[this.vField]))), d => d.properties[this.vField])
     this.colorScale = d3.scaleSequential(this.colorScheme)
@@ -795,6 +853,8 @@ class WebMoran {
     this.localResultMap = new Map(moranResult.localMorans.map(d => [d.id, d]))
     for (const feature of this.data.features) {
       const localResult = this.localResultMap.get(feature.id)
+      //localResult.neighbors.forEach(d => d.localMoran = this.localResultMap.get(d.id))
+
       if (localResult) {
         feature.properties.localMoran = localResult.localMoran
       } 
@@ -807,16 +867,24 @@ class WebMoran {
     })
 
 
-    const centroidMap = new Map(this.data.features.map(d => [d.id, d.centroid]))
-    // TODO: remove data field. 
-    this.radialMap = geo.localMoranRadials(moranResult, centroidMap)
-
     const moranElement = document.getElementById("plot-moran")
-    this.moranPlot = new MoranPlot(moranElement, moranResult, {
-      colorField: this.vField, radialMap: this.radialMap,
-      fixedColorScale: this.colorScale, state: this.dataMap.state,
-      width: 400, height: 400, numberFormat: d => d.toFixed(2)
-    })
+    if (moranResult.localMorans.length > 0) {
+      const centroidMap = new Map(this.data.features.map(d => [d.id, d.centroid]))
+      // TODO: remove data field. 
+      this.radialMap = geo.localMoranRadials(moranResult, centroidMap)
+  
+     
+      this.moranPlot = new MoranPlot(moranElement, moranResult, {
+        colorField: this.vField, radialMap: this.radialMap,
+        fixedColorScale: this.colorScale, state: this.dataMap.state,
+        width: 400, height: 400, numberFormat: d => d.toFixed(2)
+      })
+      this.moranPlot.radialMap = this.radialCheck.value ? this.moranPlot.radialMap : null
+    } else {
+      moranElement.innerHTML = ``
+    }
+
+  
 
     this.handleModeSelect(this.modeSelect.value)
   }
@@ -903,14 +971,14 @@ const webMoran = new WebMoran()
 //   calculationManager.calculate
 // }) 
 
-const dataDetailsManager = new DataDetailsManager({
-  callback: (data, vField) => {
-    webMoran.updateDataDetails(data, vField)
-  }
-})
+// const dataDetailsManager = new DataDetailsManager({
+//   callback: (data, vField) => {
+//     webMoran.updateDataDetails(data, vField)
+//   }
+// })
 
-new DataFileManager(data => {
-  dataDetailsManager.updateData(data, true)
-})
+// new DataFileManager(data => {
+//   dataDetailsManager.updateData(data, true)
+// })
 
 
